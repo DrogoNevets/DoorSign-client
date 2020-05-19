@@ -104,3 +104,4 @@ dist
 .tern-port
 
 DoorSign-client-darwin-x64/
+.vscode/

@@ -1,40 +1,16 @@
+const traySvc = require('./services/tray');
+const stateSvc = require('./services/state');
+const fetch = require('./utils/fetch');
+
 const { app, Menu, Tray } = require('electron');
-const http = require('http');
 
-const request = (path) => {
-    // Your Request Options
-    var options = {
-
-        host: "DoorSign.local",
-        port: 8080,
-        path: path,
-        method: 'GET'
-    };
-
-
-    // The Request
-    var request = http.request(options, function (response) {
-        response.on('data', function (chunk) {
-            if (chunk) {
-                var data = chunk.toString('utf8');
-            }
-        });
-    }).on("error", function (e) {
-
-    });
-    request.end();
-}
 
 const available = () => {
-    request('/available');
-    tray.setImage(`${__dirname}/door-open.png`);
-    tray.setContextMenu(availableContext);
+    fetch('/available');
 };
 
 const unavailable = () => {
-    request('/busy');
-    tray.setImage(`${__dirname}/door-closed.png`);
-    tray.setContextMenu(unavailableContext);
+    fetch('/busy');
 };
 
 const quit = () => {
@@ -43,20 +19,39 @@ const quit = () => {
 
 const availableContext = Menu.buildFromTemplate([
     { label: 'Set unavailable', type: 'normal', click: unavailable },
+    { type: 'separator' },
     { label: 'Exit', type: 'normal', click: quit }
 ]);
 
 const unavailableContext = Menu.buildFromTemplate([
     { label: 'Set available', type: 'normal', click: available },
+    { type: 'separator' },
     { label: 'Exit', type: 'normal', click: quit }
 ]);
 
-app.on('ready', () => {
-    tray = new Tray(`${__dirname}/door-open.png`);
-    available();
+function processState() {
+    stateSvc.getState()
+        .then((state) => {
+            switch (state) {
+                case '1':
+                    traySvc.image = `${__dirname}/door-open.png`;
+                    traySvc.menu = availableContext;
+                    break;
+                case '2':
+                    traySvc.image = `${__dirname}/door-closed.png`;
+                    traySvc.menu = unavailableContext;
+                    break;
+            }
+        })
+        .then(processState);
+}
 
-    tray.setToolTip('DoorSign-client');
-    tray.setContextMenu(availableContext);
+app.on('ready', () => {
+    traySvc.tray = new Tray(`${__dirname}/door-open.png`);
+    processState();
+
+    // tray.setToolTip('DoorSign-client');
+    traySvc.menu = availableContext;
     app.dock.hide();
 });
 
