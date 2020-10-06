@@ -20,7 +20,7 @@
   "homepage": "https://github.com/DrogoNevets/DoorSign-client#readme",
   "devDependencies": {
     "@types/electron": "^1.6.10",
-    "electron": "^8.3.0",
+    "electron": "^8.5.1",
     "tslint": "^5.12.1",
     "typescript": "^3.9.2"
   },
